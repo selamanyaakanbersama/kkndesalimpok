@@ -7,6 +7,10 @@ const ALAMAT = 'Jl. Tgk. Syik Dipasi, Desa Limpok, Kec. Darussalam, Kabupaten Ac
 const KOORDINAT_TEKS = '5°33′43″N 95°22′23″E';
 const MAPS_LAT = 5.56194;
 const MAPS_LNG = 95.37306;
+const KONTAK = [
+  { label: 'WhatsApp 1', tampil: '0831-7276-2408', wa: '6283172762408' },
+  { label: 'WhatsApp 2', tampil: '0813-7243-115', wa: '628137243115' },
+];
 
 const BATAS_WILAYAH = [
   { arah: 'Utara', ket: 'Dekat kawasan Kampus Universitas Syiah Kuala (USK) / Kopelma Darussalam' },
@@ -297,6 +301,24 @@ export default function Home() {
             <a className="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100 font-body-md text-body-md" href="#lokasi">Lokasi</a>
             <a className="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100 font-body-md text-body-md font-semibold" href="#kontak">Kontak</a>
           </nav>
+          <div className="flex flex-col gap-3">
+  <h3 className="font-label-sm text-label-sm text-on-surface uppercase">Hubungi Kami</h3>
+  {KONTAK.map((k) => (
+    <a
+      key={k.wa}
+      href={`https://wa.me/${k.wa}?text=${encodeURIComponent('Halo KPM Desa Limpok')}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md"
+    >
+      <span className="material-symbols-outlined text-[20px]">call</span>
+      <span>
+        {k.label}
+        <span className="block text-sm opacity-80">{k.tampil}</span>
+      </span>
+    </a>
+  ))}
+</div>
         </div>
       </footer>
     </div>
