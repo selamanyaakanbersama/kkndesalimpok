@@ -1,4 +1,19 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
+
+const IKON = {
+  keagamaan: 'mosque',
+  pendidikan: 'auto_stories',
+  kesehatan: 'directions_run',
+  lingkungan: 'delete_sweep',
+};
+const IKON_DEFAULT = 'explore';
+
+const STATUS = {
+  rencana: { label: 'Rencana', badge: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
+  berjalan: { label: 'Berjalan', badge: 'bg-primary-fixed text-primary' },
+  selesai: { label: 'Selesai', badge: 'bg-primary text-on-primary' },
+};
 
 const NAMA_DESA = 'Desa Limpok';
 const LOKASI = 'Kecamatan Darussalam, Kabupaten Aceh Besar';
@@ -30,6 +45,28 @@ const MENU = [
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [program, setProgram] = useState([]);
+  const [loadingProgram, setLoadingProgram] = useState(true);
+  const [errorProgram, setErrorProgram] = useState('');
+
+  useEffect(() => {
+    let aktif = true;
+    async function muat() {
+      const { data, error } = await supabase.from('program_kerja').select('*');
+      if (!aktif) return;
+      if (error) {
+        setErrorProgram('Data program belum bisa dimuat. Coba muat ulang halaman.');
+      } else {
+        const urut = [...(data || [])].sort((a, b) => (a.urutan ?? 999) - (b.urutan ?? 999));
+        setProgram(urut);
+      }
+      setLoadingProgram(false);
+    }
+    muat();
+    return () => {
+      aktif = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -157,70 +194,63 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Program Kerja */}
+        {/* Program Kerja (dari Supabase) */}
         <section id="program" className="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto mb-32 scroll-mt-28">
-          <div className="mb-stack-lg">
-            <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Program Kerja Kami</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Pendekatan holistik untuk pemberdayaan masyarakat {NAMA_DESA}.
-            </p>
+          <div className="mb-stack-lg flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Program Kerja Kami</h2>
+              <p className="font-body-md text-body-md text-on-surface-variant">
+                {loadingProgram || errorProgram
+                  ? `Program kerja KPM ${NAMA_DESA}.`
+                  : `${program.length} program kerja KPM ${NAMA_DESA} untuk masyarakat gampong.`}
+              </p>
+            </div>
+            <a
+              href="/program"
+              className="inline-flex items-center justify-center gap-2 bg-primary-container text-on-primary hover:opacity-90 transition-opacity px-6 py-3 rounded-full font-label-sm text-label-sm shadow-sm active:scale-95 duration-200 self-start md:self-auto"
+            >
+              Lihat semua program
+              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </a>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:auto-rows-[300px]">
-            <div className="md:col-span-8 bg-surface rounded-xl p-8 flex flex-col justify-between soft-shadow">
-              <div>
-                <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-6 text-on-secondary-container">
-                  <span className="material-symbols-outlined">groups</span>
-                </div>
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Pemberdayaan Masyarakat</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant max-w-[400px]">
-                  Mendorong kemandirian warga desa melalui pelatihan dan pendampingan berkelanjutan.
-                </p>
-              </div>
-            </div>
 
-            <div className="md:col-span-4 bg-surface rounded-xl p-8 flex flex-col justify-between soft-shadow">
-              <div>
-                <div className="w-12 h-12 rounded-full bg-tertiary-container/20 flex items-center justify-center mb-6 text-tertiary">
-                  <span className="material-symbols-outlined">verified</span>
-                </div>
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Gotong Royong</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant">
-                  Menjunjung tinggi nilai kebersamaan dalam setiap langkah pembangunan fisik maupun sosial.
-                </p>
-              </div>
-            </div>
+          {loadingProgram && <p className="text-on-surface-variant py-6">Memuat program kerja…</p>}
+          {errorProgram && <p className="text-error py-6">{errorProgram}</p>}
+          {!loadingProgram && !errorProgram && program.length === 0 && (
+            <p className="text-on-surface-variant py-6">Belum ada program kerja yang ditambahkan.</p>
+          )}
 
-            <div className="md:col-span-4 bg-primary-container text-on-primary rounded-xl p-8 flex flex-col justify-between shadow-sm relative overflow-hidden group">
-              <div className="absolute -right-8 -bottom-8 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
-                <span className="material-symbols-outlined text-[150px]">public</span>
-              </div>
-              <div className="relative z-10">
-                <h3 className="font-headline-md text-headline-md mb-4">Program Kerja</h3>
-                <div className="text-4xl font-bold font-headline-lg tracking-tight mb-2">0</div>
-                <p className="font-body-md text-body-md opacity-90">
-                  Angka ini nanti diisi otomatis dari data program kerja di database.
-                </p>
-              </div>
-            </div>
-
-            <div className="md:col-span-8 bg-surface rounded-xl flex flex-col md:flex-row overflow-hidden soft-shadow">
-              <div className="md:w-1/2 p-8 flex flex-col justify-center">
-                <div className="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center mb-6 text-primary-container">
-                  <span className="material-symbols-outlined">eco</span>
-                </div>
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Edukasi Berkelanjutan</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant">
-                  Fokus pada peningkatan kualitas sumber daya manusia melalui program bimbingan belajar dan literasi.
-                </p>
-              </div>
-              <div className="md:w-1/2 relative h-48 md:h-full">
-                <img
-                  alt="Kegiatan edukasi berkelanjutan"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHiUITF0RoP3O4qvb2QIwjyOe5QSbdL0mQO7p65s2isCVv4xDBjaX4hN_o8AxhvWe2X-63nLpTNmPs_437MlqSBqD6tUqJjsSFqibXhEnY2yvj4-kOudkl8kWpNlkzQF8hHB3MR0USnrqgiYueQZaxJsrDk0yKEAZU-TeEr7rW_zdKJcRtJ1hev4gZkNgBB2cxRUnZLJSt9f4aiXdy0kqHjQzjUlon6judSiyC7dp8tEPZNFBbMi3F"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {program.map((p) => {
+              const st = STATUS[(p.status || 'rencana').toLowerCase()] || STATUS.rencana;
+              return (
+                <a
+                  key={p.id}
+                  href="/program"
+                  className="bg-surface rounded-xl p-6 flex flex-col gap-4 soft-shadow hover:-translate-y-0.5 transition-transform"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
+                      <span className="material-symbols-outlined">
+                        {IKON[(p.kategori || '').toLowerCase()] || IKON_DEFAULT}
+                      </span>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold ${st.badge}`}>
+                      {st.label}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {p.kategori && (
+                      <span className="font-label-sm text-label-sm text-primary uppercase tracking-wide">{p.kategori}</span>
+                    )}
+                    <h3 className="font-headline-md text-headline-md text-on-surface">{p.judul}</h3>
+                    {p.deskripsi && (
+                      <p className="font-body-md text-body-md text-on-surface-variant line-clamp-3">{p.deskripsi}</p>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </section>
 
